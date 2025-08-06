@@ -1,0 +1,107 @@
+# 🐍 ERP Professional - Backend Dependencies
+# Dependencias para el backend FastAPI del sistema ERP
+
+# ============================================================================
+# 🚀 FRAMEWORK WEB
+# ============================================================================
+fastapi==0.104.1           # Framework web moderno y rápido para crear APIs
+uvicorn[standard]==0.24.0  # Servidor ASGI para FastAPI con optimizaciones
+
+# ============================================================================
+# 🗄️ BASE DE DATOS Y ORM
+# ============================================================================
+sqlalchemy==2.0.23         # ORM más popular de Python para manejo de base de datos
+psycopg2-binary==2.9.9     # Driver PostgreSQL para SQLAlchemy
+alembic==1.12.1            # Herramienta de migración de base de datos para SQLAlchemy
+
+# ============================================================================
+# 🔐 AUTENTICACIÓN Y SEGURIDAD
+# ============================================================================
+python-jose[cryptography]==3.3.0  # Manejo de JWT (JSON Web Tokens)
+passlib[bcrypt]==1.7.4      # Hashing de contraseñas con bcrypt
+python-multipart==0.0.6     # Soporte para formularios multipart/form-data
+
+# ============================================================================
+# ⚡ VALIDACIÓN Y SERIALIZACIÓN
+# ============================================================================
+pydantic==2.5.0            # Validación de datos y settings usando type hints
+pydantic-settings==2.1.0   # Manejo de configuraciones con Pydantic
+email-validator==2.1.0     # Validación de direcciones de email
+
+# ============================================================================
+# 🌐 HTTP Y CORS
+# ============================================================================
+httpx==0.25.2              # Cliente HTTP moderno para requests asíncronos
+python-dotenv==1.0.0       # Carga de variables de entorno desde archivos .env
+
+# ============================================================================
+# 📊 PROCESAMIENTO DE DATOS
+# ============================================================================
+pandas==2.1.4              # Análisis y manipulación de datos
+numpy==1.25.2              # Computación numérica
+openpyxl==3.1.2            # Lectura/escritura de archivos Excel
+reportlab==4.0.7           # Generación de PDFs
+
+# ============================================================================
+# 📧 COMUNICACIONES
+# ============================================================================
+fastapi-mail==1.4.1        # Envío de emails desde FastAPI
+jinja2==3.1.2              # Motor de plantillas para emails y reportes
+
+# ============================================================================
+# 🔧 UTILIDADES
+# ============================================================================
+python-dateutil==2.8.2     # Extensiones para manejo de fechas
+pytz==2023.3               # Timezone handling
+uuid==1.30                 # Generación de UUIDs
+
+# ============================================================================
+# 📈 MONITOREO Y LOGS
+# ============================================================================
+loguru==0.7.2              # Logger avanzado con formato estructurado
+prometheus-fastapi-instrumentator==6.1.0  # Métricas de Prometheus
+
+# ============================================================================
+# 🧪 TESTING
+# ============================================================================
+pytest==7.4.3              # Framework de testing
+pytest-asyncio==0.21.1     # Soporte para testing asíncrono
+pytest-cov==4.1.0          # Coverage de tests
+factory-boy==3.3.0         # Factories para testing de modelos
+faker==20.1.0              # Generación de datos falsos para testing
+
+# ============================================================================
+# 🚀 DESARROLLO
+# ============================================================================
+black==23.11.0             # Formateador de código Python
+isort==5.12.0              # Organizador de imports
+flake8==6.1.0              # Linter de código
+mypy==1.7.1                # Type checker estático
+pre-commit==3.6.0          # Git hooks para calidad de código
+
+# ============================================================================
+# 🐳 DEPLOYMENT
+# ============================================================================
+gunicorn==21.2.0           # WSGI HTTP Server para producción
+
+# ============================================================================
+# 🔄 CACHE (OPCIONAL)
+# ============================================================================
+redis==5.0.1               # Cliente Redis para caché
+fastapi-cache2[redis]==0.2.1  # Caché integrado con FastAPI
+
+# ============================================================================
+# 📋 NOTAS DE VERSIONES
+# ============================================================================
+# Todas las versiones están fijadas para garantizar reproducibilidad
+# Para actualizar, verificar compatibilidad entre dependencias
+# Usar 'pip-tools' para gestión avanzada de dependencias
+#
+# Instalación:
+#   pip install -r requirements.txt
+#
+# Desarrollo:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# Producción:
+#   pip install --no-dev -r requirements.txt
