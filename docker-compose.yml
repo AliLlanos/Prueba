@@ -1,0 +1,212 @@
+# 🏢 ERP Professional - Docker Compose Configuration
+# Este archivo configura todos los servicios necesarios para ejecutar el ERP completo
+# Servicios incluidos: PostgreSQL, Backend (FastAPI), Frontend (React), Nginx
+
+version: '3.8'
+
+services:
+  # 🗄️ Base de Datos PostgreSQL
+  # Servicio principal de base de datos para almacenar toda la información del ERP
+  postgres:
+    image: postgres:15-alpine
+    container_name: erp_postgres
+    restart: unless-stopped
+    environment:
+      # Configuración de la base de datos
+      POSTGRES_DB: erp_professional
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: erp_password_2024
+      POSTGRES_HOST_AUTH_METHOD: md5
+    volumes:
+      # Persistencia de datos en volumen Docker
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts de inicialización de la base de datos
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - erp_network
+    healthcheck:
+      # Verificación de salud de la base de datos
+      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_professional"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # 🐍 Backend API (FastAPI)
+  # Servidor de aplicación que maneja toda la lógica de negocio y APIs REST
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: erp_backend
+    restart: unless-stopped
+    environment:
+      # Variables de entorno para configuración del backend
+      DATABASE_URL: postgresql://erp_user:erp_password_2024@postgres:5432/erp_professional
+      SECRET_KEY: your-super-secret-jwt-key-change-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 30
+      ENVIRONMENT: development
+      # Configuración de CORS para desarrollo
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000", "http://frontend:3000"]'
+    volumes:
+      # Montaje para desarrollo en caliente
+      - ./backend:/app
+      # Volumen para logs de la aplicación
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp_network
+    healthcheck:
+      # Verificación de salud del backend
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ⚛️ Frontend (React TypeScript)
+  # Interfaz de usuario moderna y responsiva para el ERP
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: erp_frontend
+    restart: unless-stopped
+    environment:
+      # Variables de entorno para el frontend
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_ENVIRONMENT: development
+      REACT_APP_VERSION: 1.0.0
+      # Configuración para desarrollo
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+    volumes:
+      # Montaje para desarrollo en caliente
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - erp_network
+    stdin_open: true
+    tty: true
+
+  # 🌐 Nginx Reverse Proxy (Producción)
+  # Servidor web que actúa como proxy reverso y sirve archivos estáticos
+  nginx:
+    image: nginx:alpine
+    container_name: erp_nginx
+    restart: unless-stopped
+    volumes:
+      # Configuración personalizada de Nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # Archivos estáticos del frontend (para producción)
+      - ./frontend/build:/usr/share/nginx/html
+      # Logs de Nginx
+      - ./logs/nginx:/var/log/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - erp_network
+    profiles:
+      # Solo se ejecuta en el perfil de producción
+      - production
+
+  # 📊 Redis Cache (Opcional)
+  # Sistema de caché para mejorar el rendimiento de la aplicación
+  redis:
+    image: redis:7-alpine
+    container_name: erp_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password_2024
+    volumes:
+      # Persistencia de datos de Redis
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - erp_network
+    profiles:
+      # Solo se ejecuta cuando se especifica el perfil cache
+      - cache
+
+  # 📈 Adminer (Herramienta de administración de base de datos)
+  # Interfaz web para administrar la base de datos PostgreSQL
+  adminer:
+    image: adminer:latest
+    container_name: erp_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - erp_network
+    profiles:
+      # Solo se ejecuta en el perfil de desarrollo
+      - development
+
+# 🌐 Configuración de Red
+# Red personalizada para comunicación entre servicios
+networks:
+  erp_network:
+    driver: bridge
+    name: erp_professional_network
+
+# 💾 Volúmenes Persistentes
+# Almacenamiento persistente para datos críticos
+volumes:
+  # Datos de PostgreSQL
+  postgres_data:
+    driver: local
+    name: erp_postgres_data
+  # Datos de Redis (si se usa)
+  redis_data:
+    driver: local
+    name: erp_redis_data
+
+# 📝 Instrucciones de Uso:
+#
+# Desarrollo completo:
+#   docker-compose up -d
+#
+# Solo servicios esenciales (sin herramientas dev):
+#   docker-compose --profile production up -d
+#
+# Con Redis cache:
+#   docker-compose --profile cache up -d
+#
+# Con herramientas de desarrollo:
+#   docker-compose --profile development up -d
+#
+# Ver logs en tiempo real:
+#   docker-compose logs -f
+#
+# Parar todos los servicios:
+#   docker-compose down
+#
+# Reiniciar solo el backend:
+#   docker-compose restart backend
+#
+# Acceso a servicios:
+#   - Frontend: http://localhost:3000
+#   - Backend API: http://localhost:8000
+#   - Documentación API: http://localhost:8000/docs
+#   - Adminer (DB): http://localhost:8080
+#   - PostgreSQL: localhost:5432
